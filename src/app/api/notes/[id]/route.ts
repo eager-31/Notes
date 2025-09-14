@@ -5,8 +5,11 @@ import { getAuth } from '@/lib/auth';
 const prisma = new PrismaClient();
 
 // GET /api/notes/:id - Retrieve a specific note
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
-  const session = getAuth(request);
+export async function GET(
+  request: Request, // Use 'Request' instead of 'NextRequest'
+  { params }: { params: { id: string } }
+) {
+  const session = getAuth(request as any); // We cast to 'any' to reuse getAuth
   if (!session) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
