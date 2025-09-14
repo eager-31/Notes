@@ -1,0 +1,63 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("PRISMA_DATABASE_URL") // For the client (Accelerate)
+  directUrl = env("POSTGRES_URL")      // For migrations (Direct Connection)
+}
+
+// ENUMS for roles and subscription plans
+enum Role {
+  ADMIN
+  MEMBER
+}
+
+enum Plan {
+  FREE
+  PRO
+}
+
+// Tenant model (e.g., Acme, Globex)
+model Tenant {
+  id    String @id @default(cuid())
+  name  String // "Acme Inc."
+  slug  String @unique // "acme"
+  plan  Plan   @default(FREE)
+
+  users User[] // A tenant can have many users
+  notes Note[] // A tenant can have many notes
+}
+
+// User model
+model User {
+  id       String @id @default(cuid())
+  email    String @unique
+  password String
+  role     Role
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id]) // Connects user to a tenant
+
+  @@index([tenantId])
+}
+
+// Note model
+// prisma/schema.prisma
+
+model Note {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  createdAt DateTime @default(now()) // Add this line
+  updatedAt DateTime @updatedAt     // Add this line
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId])
+}
