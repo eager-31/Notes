@@ -9,13 +9,6 @@ interface Note {
   content: string;
 }
 
-// Define the shape of the decoded JWT payload
-interface DecodedToken {
-  tenantId: string;
-  role: 'ADMIN' | 'MEMBER';
-  slug: string; // We'll need the tenant slug for the upgrade URL
-}
-
 export default function HomePage() {
   // State variables to manage the UI and data
   const [token, setToken] = useState<string | null>(null);
@@ -25,7 +18,6 @@ export default function HomePage() {
   const [noteTitle, setNoteTitle] = useState('');
   const [noteContent, setNoteContent] = useState('');
   const [error, setError] = useState('');
-  const [decodedToken, setDecodedToken] = useState<DecodedToken | null>(null);
 
   // This effect runs once when the component loads to check for a token in localStorage
   useEffect(() => {
@@ -38,24 +30,30 @@ export default function HomePage() {
   // This effect runs whenever the token changes
   useEffect(() => {
     if (token) {
-      // Decode the JWT to get tenant and role info
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        setDecodedToken(payload);
-      } catch (e) {
-        console.error('Failed to decode token:', e);
-        handleLogout();
-      }
-      // Fetch notes for the logged-in user
       fetchNotes();
     } else {
-      // Clear notes and user info if there's no token
+      // Clear notes if there's no token
       setNotes([]);
-      setDecodedToken(null);
     }
   }, [token]);
 
   // --- API Call Functions ---
+
+  const fetchNotes = async () => {
+    if (!token) return;
+    try {
+      const res = await fetch('/api/notes', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        throw new Error('Failed to fetch notes.');
+      }
+      const data = await res.json();
+      setNotes(data);
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  };
 
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
@@ -73,19 +71,8 @@ export default function HomePage() {
       const { token: newToken } = await res.json();
       localStorage.setItem('authToken', newToken); // Save token to local storage
       setToken(newToken);
-    } catch (err: any) {
-      setError(err.message);
-    }
-  };
-
-  const fetchNotes = async () => {
-    if (!token) return;
-    const res = await fetch('/api/notes', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (res.ok) {
-      const data = await res.json();
-      setNotes(data);
+    } catch (err) {
+      setError((err as Error).message);
     }
   };
 
@@ -113,8 +100,8 @@ export default function HomePage() {
       setNoteTitle('');
       setNoteContent('');
       fetchNotes();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError((err as Error).message);
     }
   };
 
