@@ -4,11 +4,15 @@ import { getAuth } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
-// GET /api/notes/:id - Retrieve a specific note
-export async function GET(
-  request: NextRequest,
-  context: { params: { id: string } }
-) {
+// ✅ Correct context type
+interface Context {
+  params: {
+    id: string;
+  };
+}
+
+// GET /api/notes/:id
+export async function GET(request: NextRequest, context: Context) {
   const session = getAuth(request);
   if (!session) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -26,11 +30,8 @@ export async function GET(
   return NextResponse.json(note);
 }
 
-// PUT /api/notes/:id - Update a note
-export async function PUT(
-  request: NextRequest,
-  context: { params: { id: string } }
-) {
+// PUT /api/notes/:id
+export async function PUT(request: NextRequest, context: Context) {
   const session = getAuth(request);
   if (!session) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -58,11 +59,8 @@ export async function PUT(
   }
 }
 
-// DELETE /api/notes/:id - Delete a note
-export async function DELETE(
-  request: NextRequest,
-  context: { params: { id: string } }
-) {
+// DELETE /api/notes/:id
+export async function DELETE(request: NextRequest, context: Context) {
   const session = getAuth(request);
   if (!session) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
