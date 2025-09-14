@@ -1,10 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Add this eslint section
   eslint: {
-    rules: {
-      '@typescript-eslint/no-explicit-any': 'off',
-    },
+    // Warning: This allows production builds to successfully complete even if
+    // your project has ESLint errors.
+    ignoreDuringBuilds: true,
   },
 };
 

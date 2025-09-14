@@ -4,18 +4,18 @@ import { getAuth } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
-// GET /api/notes/:id - Retrieve a specific note
+// GET /api/notes/:id - Retrieve a SPECIFIC note
 export async function GET(
-  request: Request, // Use 'Request' instead of 'NextRequest'
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const session = getAuth(request as any); // We cast to 'any' to reuse getAuth
+  const session = getAuth(request);
   if (!session) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
   const note = await prisma.note.findFirst({
-    where: { id: params.id, tenantId: session.tenantId }, // Tenant Isolation
+    where: { id: params.id, tenantId: session.tenantId },
   });
 
   if (!note) {
@@ -25,7 +25,10 @@ export async function GET(
 }
 
 // PUT /api/notes/:id - Update a note
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   const session = getAuth(request);
   if (!session) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -34,12 +37,12 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   const { title, content } = await request.json();
   try {
     const updatedNote = await prisma.note.updateMany({
-      where: { id: params.id, tenantId: session.tenantId }, // Tenant Isolation
+      where: { id: params.id, tenantId: session.tenantId },
       data: { title, content },
     });
 
     if (updatedNote.count === 0) {
-       return NextResponse.json({ message: 'Note not found or you do not have permission to edit it' }, { status: 404 });
+      return NextResponse.json({ message: 'Note not found or you do not have permission to edit it' }, { status: 404 });
     }
     return NextResponse.json({ message: 'Note updated successfully' });
   } catch (error) {
@@ -48,22 +51,25 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 }
 
 // DELETE /api/notes/:id - Delete a note
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   const session = getAuth(request);
   if (!session) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
-   try {
+  try {
     const deletedNote = await prisma.note.deleteMany({
-      where: { id: params.id, tenantId: session.tenantId }, // Tenant Isolation
+      where: { id: params.id, tenantId: session.tenantId },
     });
 
     if (deletedNote.count === 0) {
-       return NextResponse.json({ message: 'Note not found or you do not have permission to delete it' }, { status: 404 });
+      return NextResponse.json({ message: 'Note not found or you do not have permission to delete it' }, { status: 404 });
     }
-    return new NextResponse(null, { status: 204 }); // 204 No Content for successful deletion
+    return NextResponse.json({ message: 'Note deleted successfully' });
   } catch (error) {
-     return NextResponse.json({ message: 'Note not found' }, { status: 404 });
+    return NextResponse.json({ message: 'Note not found' }, { status: 404 });
   }
 }

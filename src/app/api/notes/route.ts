@@ -1,11 +1,11 @@
 import { PrismaClient } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuth } from '@/lib/auth'; // Using the helper we just made
+import { getAuth } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 const FREE_PLAN_NOTE_LIMIT = 3;
 
-// GET /api/notes - List all notes for the current tenant
+// GET /api/notes - List ALL notes for the current tenant
 export async function GET(request: NextRequest) {
   const session = getAuth(request);
   if (!session) {
@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
   }
 
   const notes = await prisma.note.findMany({
-    where: { tenantId: session.tenantId }, // Tenant Isolation
+    where: { tenantId: session.tenantId },
     orderBy: { createdAt: 'desc' },
   });
 
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     data: {
       title,
       content,
-      tenantId: session.tenantId, // Tenant Isolation
+      tenantId: session.tenantId,
     },
   });
 
