@@ -4,11 +4,15 @@ import { getAuth } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
+// Define the type for route handler parameters
+type RouteParams = {
+  params: {
+    id: string;
+  };
+};
+
 // GET /api/notes/:id - Retrieve a SPECIFIC note
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, { params }: RouteParams) {
   const session = getAuth(request);
   if (!session) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -25,10 +29,7 @@ export async function GET(
 }
 
 // PUT /api/notes/:id - Update a note
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: NextRequest, { params }: RouteParams) {
   const session = getAuth(request);
   if (!session) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -51,10 +52,7 @@ export async function PUT(
 }
 
 // DELETE /api/notes/:id - Delete a note
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest, { params }: RouteParams) {
   const session = getAuth(request);
   if (!session) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
