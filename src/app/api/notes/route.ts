@@ -3,47 +3,73 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuth } from '@/lib/auth';
 
 const prisma = new PrismaClient();
-const FREE_PLAN_NOTE_LIMIT = 3;
 
-// GET /api/notes - List ALL notes for the current tenant
-export async function GET(request: NextRequest) {
+// GET /api/notes/:id - Ek specific note ko retrieve karein
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   const session = getAuth(request);
   if (!session) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
-  const notes = await prisma.note.findMany({
-    where: { tenantId: session.tenantId },
-    orderBy: { createdAt: 'desc' },
+  const note = await prisma.note.findFirst({
+    where: { id: params.id, tenantId: session.tenantId },
   });
 
-  return NextResponse.json(notes);
+  if (!note) {
+    return NextResponse.json({ message: 'Note not found' }, { status: 404 });
+  }
+  return NextResponse.json(note);
 }
 
-// POST /api/notes - Create a new note
-export async function POST(request: NextRequest) {
+// PUT /api/notes/:id - Ek note ko update karein
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   const session = getAuth(request);
   if (!session) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-  }
-
-  // Subscription Limit Check
-  const tenant = await prisma.tenant.findUnique({ where: { id: session.tenantId } });
-  if (tenant?.plan === 'FREE') {
-    const noteCount = await prisma.note.count({ where: { tenantId: session.tenantId } });
-    if (noteCount >= FREE_PLAN_NOTE_LIMIT) {
-      return NextResponse.json({ message: 'Note limit reached. Please upgrade to Pro.' }, { status: 403 });
-    }
   }
 
   const { title, content } = await request.json();
-  const newNote = await prisma.note.create({
-    data: {
-      title,
-      content,
-      tenantId: session.tenantId,
-    },
-  });
+  try {
+    const updatedNote = await prisma.note.updateMany({
+      where: { id: params.id, tenantId: session.tenantId },
+      data: { title, content },
+    });
 
-  return NextResponse.json(newNote, { status: 201 });
+    if (updatedNote.count === 0) {
+      return NextResponse.json({ message: 'Note not found or you do not have permission to edit it' }, { status: 404 });
+    }
+    return NextResponse.json({ message: 'Note updated successfully' });
+  } catch (error) {
+    return NextResponse.json({ message: 'Note not found' }, { status: 404 });
+  }
+}
+
+// DELETE /api/notes/:id - Ek note ko delete karein
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const session = getAuth(request);
+  if (!session) {
+    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const deletedNote = await prisma.note.deleteMany({
+      where: { id: params.id, tenantId: session.tenantId },
+    });
+
+    if (deletedNote.count === 0) {
+      return NextResponse.json({ message: 'Note not found or you do not have permission to delete it' }, { status: 404 });
+    }
+    return NextResponse.json({ message: 'Note deleted successfully' });
+  } catch (error) {
+    return NextResponse.json({ message: 'Note not found' }, { status: 404 });
+  }
 }
