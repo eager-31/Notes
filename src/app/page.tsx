@@ -105,14 +105,26 @@ export default function HomePage() {
     }
   };
 
-  const handleDeleteNote = async (id: string) => {
-    if (!token) return;
-    await fetch(`/api/notes/${id}`, {
+const handleDeleteNote = async (id: string) => {
+  if (!token) return;
+
+  try {
+    const res = await fetch(`/api/notes/${id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     });
-    fetchNotes(); // Refresh notes list
-  };
+
+    if (!res.ok) {
+      // If the server responded with an error, handle it
+      throw new Error('Failed to delete the note.');
+    }
+
+    fetchNotes(); // Refresh notes list only on success
+  } catch (err) {
+    // Assuming you have an 'error' state variable like in your other functions
+    setError((err as Error).message);
+  }
+};
 
   const handleLogout = () => {
     setToken(null);

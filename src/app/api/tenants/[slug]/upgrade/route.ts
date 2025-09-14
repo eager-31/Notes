@@ -5,7 +5,8 @@ import { getAuth } from '@/lib/auth';
 const prisma = new PrismaClient();
 
 // POST /api/tenants/:slug/upgrade
-export async function POST(request: NextRequest, { params }: { params: { slug: string } }) {
+export async function POST(request: NextRequest, props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   const session = getAuth(request);
 
   // 1. Check for valid session
