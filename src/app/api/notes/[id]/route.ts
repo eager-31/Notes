@@ -4,15 +4,11 @@ import { getAuth } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
-// ✅ Correct context type
-interface Context {
-  params: {
-    id: string;
-  };
-}
-
 // GET /api/notes/:id
-export async function GET(request: NextRequest, context: Context) {
+export async function GET(
+  request: NextRequest,
+  context: { params: { id: string } }
+) {
   const session = getAuth(request);
   if (!session) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -31,7 +27,10 @@ export async function GET(request: NextRequest, context: Context) {
 }
 
 // PUT /api/notes/:id
-export async function PUT(request: NextRequest, context: Context) {
+export async function PUT(
+  request: NextRequest,
+  context: { params: { id: string } }
+) {
   const session = getAuth(request);
   if (!session) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -60,7 +59,10 @@ export async function PUT(request: NextRequest, context: Context) {
 }
 
 // DELETE /api/notes/:id
-export async function DELETE(request: NextRequest, context: Context) {
+export async function DELETE(
+  request: NextRequest,
+  context: { params: { id: string } }
+) {
   const session = getAuth(request);
   if (!session) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
