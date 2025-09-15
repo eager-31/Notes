@@ -7,14 +7,15 @@ const prisma = new PrismaClient();
 // GET /api/notes/:id
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+{ params }: { params: { notesid: string } }
 ) {
+  const noteId = params.notesid;
   const session = getAuth(request);
   if (!session) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
   const note = await prisma.note.findFirst({
-    where: { id: params.id, tenantId: session.tenantId },
+    where: { id: params.notesid, tenantId: session.tenantId },
   });
   if (!note) {
     return NextResponse.json({ message: 'Note not found' }, { status: 404 });
@@ -25,8 +26,9 @@ export async function GET(
 // PUT /api/notes/:id
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+{ params }: { params: { notesid: string } }
 ) {
+    const noteId = params.notesid;
   const session = getAuth(request);
   if (!session) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -34,7 +36,7 @@ export async function PUT(
   const { title, content } = await request.json();
   try {
     const updatedNote = await prisma.note.updateMany({
-      where: { id: params.id, tenantId: session.tenantId },
+      where: { id: params.notesid, tenantId: session.tenantId },
       data: { title, content },
     });
     if (updatedNote.count === 0) {
@@ -49,7 +51,7 @@ export async function PUT(
 // DELETE /api/notes/:id
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+{ params }: { params: { notesid: string } }
 ) {
   const session = getAuth(request);
   if (!session) {
@@ -57,7 +59,7 @@ export async function DELETE(
   }
   try {
     const deletedNote = await prisma.note.deleteMany({
-      where: { id: params.id, tenantId: session.tenantId },
+      where: { id: params.notesid, tenantId: session.tenantId },
     });
     if (deletedNote.count === 0) {
       return NextResponse.json({ message: 'Note not found' }, { status: 404 });
